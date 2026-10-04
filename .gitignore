@@ -6,3 +6,5 @@ render.exe
 render_linux
 frame.ppm
 __pycache__/
+.env
+node_modules/

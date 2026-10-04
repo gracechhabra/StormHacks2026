@@ -142,5 +142,29 @@ URL="http://localhost:8080/ui"
   elif command -v open >/dev/null; then open "$URL"
   else echo "open $URL in a browser"; fi ) &
 
+# ---- second site: Terra AI (GeminiIntegration, port 8787) --------------------
+
+GEMINI_DIR="$(cd ../GeminiIntegration 2>/dev/null && pwd)"
+URL2="http://localhost:8787"
+if [ -n "$GEMINI_DIR" ] && (command -v fuser >/dev/null && fuser 8787/tcp >/dev/null 2>&1); then
+    echo "port 8787 is already in use (an older Terra AI server?), so the new Terra AI"
+    echo "was not started. Stop the old one (ps aux | grep earthelevate_server) and"
+    echo "run this again."
+elif [ -n "$GEMINI_DIR" ]; then
+    ( cd "$GEMINI_DIR" && exec "$OLDPWD/$PY" earthelevate_server.py ) &
+    GEMINI_PID=$!
+    trap 'kill $GEMINI_PID 2>/dev/null' EXIT INT TERM
+    ( sleep 2
+      if [ $is_wsl -eq 1 ]; then
+          if command -v wslview >/dev/null; then wslview "$URL2"
+          else cmd.exe /c start "" "$URL2" >/dev/null 2>&1 || echo "open $URL2 in a browser"; fi
+      elif command -v xdg-open >/dev/null; then xdg-open "$URL2" >/dev/null 2>&1
+      elif command -v open >/dev/null; then open "$URL2"
+      else echo "open $URL2 in a browser"; fi ) &
+    echo "Terra AI on $URL2"
+else
+    echo "../GeminiIntegration not found: skipping the second site"
+fi
+
 echo "server on http://localhost:8080 (UI: $URL, Ctrl-C to stop)"
-exec "$PY" worldgen.py --serve --port 8080 $UART_ARGS
+"$PY" worldgen.py --serve --port 8080 $UART_ARGS

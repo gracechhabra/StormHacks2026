@@ -1735,6 +1735,14 @@ async function runGenerate(sel, { manual = false } = {}) {
   }
 }
 
+// Terra AI (earthelevate_server.py) shows the place that was just generated
+function openTerraAI(sel) {
+  const name = sel.name || sel.gen?.data?.location?.name || "";
+  const qs = new URLSearchParams({ lat: sel.lat.toFixed(5), lon: sel.lon.toFixed(5) });
+  if (name && !/^-?\d/.test(name)) qs.set("label", name);
+  location.href = `${location.protocol}//${location.hostname}:8787/?${qs}`;
+}
+
 function applyGen(sel, entry, key) {
   const d = entry.data;
   sel.gen = entry;
@@ -2072,6 +2080,8 @@ async function uploadCurrent() {
       if (live()) setUpload("error", msg || `Upload failed (${res.status})`);
       return;
     }
+    // the board upload is queued on the server and carries on by itself: open Terra AI alongside it
+    openTerraAI(s);
     const t0 = performance.now();
     while (performance.now() - t0 < 120000) {
       await new Promise((r) => setTimeout(r, 600));
